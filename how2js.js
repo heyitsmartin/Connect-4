@@ -13,6 +13,8 @@ function domloaded(){
     var currentCol =-1; 
     var turn = 0 ; 
     var rect = c.getBoundingClientRect(); 
+    var count = 0 ;
+    
     
     function piece(startx,starty) { 
         this.startx= startx;
@@ -68,7 +70,23 @@ function domloaded(){
         var x = event.clientX-c.getBoundingClientRect().left; 
         var y = event.clientY-c.getBoundingClientRect().top; 
         console.log("x: "+x + " y: "+y);
-        checkWin(mouseCol(x),placePiece(mouseCol(x),board));
+        count = checkWin(mouseCol(x),placePiece(mouseCol(x),board));
+        
+        if(count >= 4) { 
+            if( turn == 1 ) { 
+                var win = "Orange"; 
+            }else { 
+                var win = "Blue";
+            }
+           if( window.confirm("Congrats, "+win+" wins!\n Start a new game?")){
+              newGame();
+            }else { 
+                c.removeEventListener("mousedown", onClickCanvas, false);
+                window.alert("Refresh the page to restart!");
+                console.log("GAME OVER YO.");
+    
+            }
+        }
         drawCanvas();
         
         
@@ -138,7 +156,7 @@ function domloaded(){
     c.addEventListener('mousemove',function(event){ 
         var mouseloc = getMouse(c, event);
         // if the function is called 
-        currentCol = mouseCol(mouseloc.x);
+        //currentCol = mouseCol(mouseloc.x);
         
         
     }, false);
@@ -174,81 +192,74 @@ function domloaded(){
     }
     
     //check for win 
+    //Only interesting part, kinda gave up after doing this.
     function checkWin(x,y) { 
         var startx =x;
         var starty=y; 
         var tempx = x ; 
         var tempy = y;
         var count = 1; 
+        var go = true; 
+        var highc =0; 
         var a = board[startx][starty].team; 
         console.log("Starting position: ({0},{1})", startx,starty);
         for(i=-1; i<=1;i++) {
             for(j=-1; j<=1;j++){
                 if(i==0 && j==0) continue;
-                if (tempy+j<6 && tempx+i <7 && tempx != -1 && tempy != -1) {
-                    
-                    
-                    
-                    while(board[tempx+i][tempy+j].team == a) {
-                        console.log(" f looking for: "+a+ "at ("+(tempx+i) +","+(tempy+j)+") found: "+board[tempx+i][tempy+j].team);
-                        count++; 
-                        tempx+=i;
-                        tempy+=j;
-                        if(tempy+j >=6 || tempx+i >=7 ) break;
-                    }
-                    tempx=startx;
-                    tempy=starty;
-                }
                 
-    
-                if( tempx-i>-1 && tempy-j >-1 && tempx != -1 && tempy != -1){
-                    while(board[tempx-i][tempy-j].team == a) {
-                        count++; 
-                        tempx -= i;
-                        tempy -= j;
-                        
-                        if(tempy+j >= 6 || tempx-i <= -1 ) break;
-                    }
-                    tempx=startx;
-                    tempy=starty;
-                }
-                if(tempx == -1 && tempy == 1 && tempx - 1 > -1  && tempy +1  < 6) { 
-                     while(board[tempx+i][tempy+j].team == a) {
-                        console.log(" f looking for: "+a+ "at ("+(tempx+i) +","+(tempy+j)+") found: "+board[tempx+i][tempy+j].team);
-                        count++; 
-                        tempx+=i;
-                        tempy+=j;
-                        if(tempy+j >=6 || tempx+i >=7 ) break;
-                    }
-                    tempx=startx;
-                    tempy=starty;
-                    
-                    
-                }
+                var i2 = i ;
+                var j2= j;
                 
-                if(tempx == 1 && tempy == -1 && tempx - 1 > -1  && tempy +1  < 6) { 
-                     while(board[tempx+i][tempy+j].team == a) {
-                        console.log(" f looking for: "+a+ "at ("+(tempx+i) +","+(tempy+j)+") found: "+board[tempx+i][tempy+j].team);
+                if(x+i2 >6 || y+j2 > 5 || x+i2 <0 || y+j2 < 0) {
+                    go =false; 
+                }else if(a != board[x+i][y+j].team) continue; 
+                
+                    while(go){
+                        console.log("found position: ({0},{1})", (x+i2),(y+j2));
                         count++; 
-                        tempx+=i;
-                        tempy+=j;
-                        if(tempy+j >=6 || tempx+i >=7 ) break;
-                        if(tempy+j >=6 || tempx+i >=7 ) break;
+                        if(i2<0) i2-- ;
+                        if (j2<0) j2 --; 
+                        if( j2>0) j2++;
+                        if(i2>0)i2++;
+                       
+                        if(x+i2 >6 || y+j2 > 5 || x+i2 <0 || y+j2 < 0) {
+                            go =false; 
+                        }else if(a != board[x+i2][y+j2].team) go = false; 
                     }
-                    tempx=startx;
-                    tempy=starty;
-                    
-                    
-                }
                 
-                count = 0 ;
+                i2=i;
+                j2=j; 
+                go = true;
                 
-            }
+                if(x-i2 <0 || y-j2 <0|| x-i2 >6 || y-j2 >5) {
+                    go =false; 
+                }else if(a != board[x-i2][y-j2].team) go = false; 
+                
+                    while(go){
+                         console.log("2 found position: ({0},{1})", (x-i2),(y-j2));
+                        count++; 
+                        if(i2<0) i2-- ;
+                        if (j2<0) j2 --; 
+                        if( j2>0) j2++;
+                        if(i2>0)i2++;
+                        if(x-i2 <0 || y-j2 <0|| x-i2 >6 || y-j2 >5) {
+                            go =false; 
+                        }else if(a != board[x-i2][y-j2].team) go = false; 
+                    }
+                
+                
+                
             
-        }      
+            }   
+            console.log("win count: "+count);
+            if( count >= highc){
+                highc = count;
+            }
+                
+            count =1;
+        }
         
-        
-        console.log("winning found: " +count+" pieces");
+        return highc;
         
         
         
@@ -294,38 +305,6 @@ function domloaded(){
         cDraw.stroke();
     }
     
-  
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
 
